@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+import subprocess
+from threading import Timer
+
+
+class Watcher:
+    timer: Timer = None
+
+    def blank(self):
+        if self.timer is not None:
+            return
+        self.timer = Timer(3, lambda: subprocess.call(
+            ['vcgencmd', 'display_power', '0']))
+        self.timer.start()
+
+    def unblank(self):
+        self._cancel_timer()
+        subprocess.call(['vcgencmd', 'display_power', '1'])
+
+    def run(self):
+        self._cancel_timer()
+
+    def invoke(self, name):
+        fn = getattr(self, name, None)
+        if callable(fn):
+            fn()
+
+    def _cancel_timer(self):
+        if self.timer is None:
+            return
+        self.timer.cancel()
+        self.timer = None
+
+
+watcher = Watcher()
+
+process = subprocess.Popen(['xscreensaver-command', '-watch'],
+                           stdout=subprocess.PIPE, universal_newlines=True)
+for c in iter(process.stdout.readline, ''):
+    action = c.split(' ', 2)[0].lower()
+    watcher.invoke(action)

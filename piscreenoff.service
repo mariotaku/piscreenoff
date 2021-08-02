@@ -1,0 +1,8 @@
+[Unit]
+Description=Turn off screen automatically for screen savers
+
+[Service]
+ExecStart=/usr/local/bin/piscreenoff
+
+[Install]
+WantedBy=graphical-session.target
